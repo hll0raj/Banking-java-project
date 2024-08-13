@@ -1,54 +1,54 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-        stage('checkout the code from github'){
-            steps{
-                 git url: 'https://github.com/sumitsingh231/Banking-java-project/'
-                 echo 'github url checkout'
+    stages {
+        stage('Checkout') {
+            steps {
+                git url:'https://github.com/hll0raj/Banking-java-project.git'
+                echo 'git url checkout'
             }
         }
-        stage('codecompile with sumit'){
-            steps{
-                echo 'starting compiling'
-                sh 'mvn compile'
-            }
-        }
-        stage('codetesting with sumit'){
-            steps{
+        stage('Maven Test') {
+            steps {
                 sh 'mvn test'
             }
         }
-        stage('qa with sumit'){
-            steps{
+        stage('Maven Checkstyle') {
+            steps {
+                // Run Maven Checkstyle
                 sh 'mvn checkstyle:checkstyle'
             }
         }
-        stage('package with sumit'){
-            steps{
+        stage('Maven Compile') {
+            steps {
+                sh 'mvn compile'
+            }
+        }
+        stage('Maven Package') {
+            steps {
                 sh 'mvn package'
             }
         }
-        stage('run dockerfile'){
-          steps{
-               sh 'docker build -t sumitsingh231/myproject:1 .'
-           }
-        }
-        stage('Login the docker hub and push the file'){
-            steps{
-                withCredentials([string(credentialsId: 'dockerhubpassword', variable: 'dockerhubpass')]) {
-                    sh 'docker login -u sumitsingh231 -p ${dockerhubpass}'
-                }
+        stage('run dockerfile and build image') {
+            steps {
+                sh 'docker build -t rajni644/project:1 .'
             }
         }
-        stage('push to docker hub'){
-          steps{
-               sh 'docker push sumitsingh231/myproject:1'
-           }
+        stage('login to docker hub') {
+            steps{
+                withCredentials([string(credentialsId: 'dockerhubpassword', variable: 'dockerhubpass')]) {
+                    sh 'docker login -u rajni644 -p ${dockerhubpass}'
+                }                
+            }
         }
-        stage('Diployment stage using ansible'){
-          steps{
-              ansiblePlaybook become: true, credentialsId: 'ansible', disableHostKeyChecking: true, installation: 'ansible', inventory: '/etc/ansible/hosts', playbook: 'ansible-playbook.yml', sudoUser: null, vaultTmpPath: ''
-           }
+        stage('push to dockerhub') {
+            steps {
+                sh ' docker push rajni644/project:1 '
+            }
+        }
+        stage('deployment stage using ansible') {
+            steps {
+                ansiblePlaybook become: true, credentialsId: 'ansible', disableHostKeyChecking: true, installation: 'ansible', inventory: '/etc/ansible/hosts', playbook: 'ansible-playbook.yml', sudoUser: null, vaultCredentialsId: 'dockerhubpassword', vaultTmpPath: ''
+            }
         }
     }
 }
